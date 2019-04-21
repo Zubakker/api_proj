@@ -33,7 +33,15 @@ def main():
         'session': request.json['session'],
         'version': request.json['version'],
         'response': {
-            'end_session': False
+            'end_session': False,
+            "buttons": [
+                {
+                    "title": "Активная гиперссылка на сервис Яндекс.Переводчик",
+                    "payload": {},
+                    "url": "http://translate.yandex.ru/",
+                    "hide": False
+                }
+            ]
         }
     }
     handle_dialog(response, request.json)
@@ -139,8 +147,11 @@ def handle_dialog(res, req):
         сыграем в слова рус/анг
         сыграем в сапера"""
         return
-
-    rq = req["request"]["original_utterance"]
+    try:
+        rq = req["request"]["original_utterance"]
+    except:
+        res["response"]["text"] = "а теперь введите команду"
+        return
     if rq == "конец!":
         sessionStorage[user_id] = { "game": None,
                                     "words": list(),
@@ -353,7 +364,7 @@ def handle_dialog(res, req):
         key = "key=trnsl.1.1.2019041    7T145812Z.69aff170ae6543ff.5e8cfd7482419796d98656726fd70c0a061374ef&"
         tr = requests.get( url + key + "lang=ru" + "&text=" + word ).json()["text"][0]
 
-        res["response"]["text"] = "а вот и перевод: " + tr
+        res["response"]["text"] = "а вот и перевод: " + tr + " Перевод осуществлён сервисом Яндекс.Переводчик"
 
     elif rq.startswith("переведи"):
         word = rq.split()[1]
@@ -363,14 +374,14 @@ def handle_dialog(res, req):
 
         tr = requests.get( url + key + "lang=" + "ru-" + lang + "&text=" + word ).json()["text"][0]
 
-        res["response"]["text"] = "а вот и оно: " + tr
+        res["response"]["text"] = "а вот и оно: " + tr + " Перевод осуществлён сервисом Яндекс.Переводчик"
 
     elif rq.startswith("определи язык"):
         word = " ".join( rq.split()[2:] )
         url = "https://translate.yandex.net/api/v1.5/tr.json/detect?"
         key = "key=trnsl.1.1.20190417T145812Z.69aff170ae6543ff.5e8cfd7482419796d98656726fd70c0a061374ef&"
         lang = requests.get( url + key + "text=" + word ).json()["lang"]
-        res["response"]["text"] = "высока вероятность, что язык текста " + rev_langs[lang]
+        res["response"]["text"] = "высока вероятность, что язык текста " + rev_langs[lang] + " анализ осуществлён сервисом Яндекс.Переводчик"
 
     elif rq == "расскажи анекдот":
         res["response"]["text"] = random.choice( anecs )
