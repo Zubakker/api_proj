@@ -52,7 +52,52 @@ def main():
 def handle_dialog(res, req):
     user_id = req['session']['user_id']
     res["response"]["text"] = ""
-
+    def check(field):
+        for i in range(3):
+            if field[0][i] == field[1][i] == field[2][i] and field[0][i] != 0:
+                if field[0][i] == 2:
+                    print("компьютер победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                    sessionStorage[user_id]["game"] = None
+                    return 1
+                else:
+                    print("человек победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                    sessionStorage[user_id]["game"] = None
+                    return 1
+            if field[i][0] == field[i][1] == field[i][2] and field[i][0] != 0:
+                if field[i][0] == 2:
+                    print("компьютер победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                    sessionStorage[user_id]["game"] = None
+                    return 1
+                else:
+                    print("человек победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                    sessionStorage[user_id]["game"] = None
+                    return 1
+        if field[0][0] == field[1][1] == field[2][2] and field[0][0] != 0:
+            if field[0][0] == 2:
+                print("компьютер победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                sessionStorage[user_id]["game"] = None
+                return 1
+            else:
+                print("человек победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                sessionStorage[user_id]["game"] = None
+                return 1
+        if field[0][2] == field[1][1] == field[2][0] and field[1][1] != 0:
+            if field[1][1] == 2:
+                print("компьютер победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                sessionStorage[user_id]["game"] = None
+                return 1
+            else:
+                print("человек победил, сыграем снова? для этого 'сыграем в крестики нолики'")
+                sessionStorage[user_id]["game"] = None
+                return 1
+        for i in field:
+            if 0 in i:
+                break
+        else:
+            print("кажется у нас ничья, попробуем снова? для этого 'сыграем в крестики нолики'")
+            sessionStorage[user_id]["game"] = None
+            return 1
+        return 0
 
     def redraw_field(x, y):
         w, h, m, field, smf, flags = sessionStorage[user_id]["words"]
@@ -110,13 +155,13 @@ def handle_dialog(res, req):
                 elif smf[a][b] != '=' and field[a][b] != 0:
                     n += str(field[a][b])
                 elif smf[a][b] != '=':
-                    n += '_'
+                    n += '`'
                 else:
                     n += '='
                 if w > 9:
                     n += '__'
                 else:
-                    n += ''
+                    n += '_'
             print(n)
 
 
@@ -145,7 +190,10 @@ def handle_dialog(res, req):
         переведи {иностранное слово} на русский
         расскажи анекдот
         сыграем в слова рус/анг
-        сыграем в сапера"""
+        сыграем в сапера
+        сыграем в крестики нолики
+        помощь
+        что ты умеешь"""
         return
     try:
         rq = req["request"]["original_utterance"]
@@ -216,8 +264,8 @@ def handle_dialog(res, req):
                 print("вы ввели какие-то странные данные, попробуйте еще раз")
                 return
             sessionStorage[user_id]["words"] += [w, h]
-            if w > 30 or h > 30:
-                print("извините, но размеры поля привышают 30х30, попробуйте снова")
+            if w > 12 or h > 20:
+                print("извините, но размеры поля привышают 12х20, попробуйте снова")
                 sessionStorage[user_id]["words"] = list()
                 return
             else:
@@ -232,7 +280,7 @@ def handle_dialog(res, req):
             except:
                 print("вы ввели какие-то странные данные, попробуйте еще раз")
                 return
-       
+
             w, h = sessionStorage[user_id]["words"][:2]
             if m > w * h:
                 print("извините, но количество бомб выше количества клеток поля, попробуйте снова")
@@ -300,8 +348,8 @@ def handle_dialog(res, req):
                 except:
                     print("вы ввели какие-то странные данные, попробуйте еще раз")
                     return
-                            
-                if x > w or h > y:
+
+                if x > w or y > h:
                     print("координаты вышли за границы, попробуйте еще")
                     return
 
@@ -347,7 +395,7 @@ def handle_dialog(res, req):
                 print("координаты вышли за границы, попробуйте еще")
                 return
 
-            
+
             if not redraw_field(x, y):
                 print('GAME OVER')
                 brea(user_id)
@@ -357,7 +405,36 @@ def handle_dialog(res, req):
             sessionStorage[user_id][4] = smf
 
         return
-
+    
+    if sessionStorage[user_id]["game"] == "tic":
+        com = rq.split()
+        x, y = int(com[0]) - 1, int(com[1]) - 1
+        if sessionStorage[user_id]["field"][y][x]:
+            res["response"]["text"] = "это место уже занято, попробуйте снова"
+        else:
+            sessionStorage[user_id]["field"][y][x] = 1
+            if not check(sessionStorage[user_id]["field"]):
+                pos = []
+                for i in range(3):
+                    for j in range(3):
+                        if not sessionStorage[user_id]["field"][j][i]:
+                            pos.append((j,i))
+                if pos:
+                    turn = random.choice(pos)
+                    sessionStorage[user_id]["field"][turn[0]][turn[1]] = 2
+                    check(sessionStorage[user_id]["field"])
+                    print("_123")
+                    for i in range(3):
+                        res["response"]["text"] += str(i + 1)
+                        for j in range(3):
+                            if sessionStorage[user_id]["field"][i][j] == 0:
+                                res["response"]["text"] += "_"
+                            elif sessionStorage[user_id]["field"][i][j] == 1:
+                                res["response"]["text"] += "X"
+                            else:
+                                res["response"]["text"] += "O"
+                        res["response"]["text"] += "\n"             
+        return
     if rq.endswith( "на русский" ):
         word = rq.split()[1]
         url = "https://translate.yandex.net/api/v1.5/tr.json/translate?"
@@ -397,14 +474,30 @@ def handle_dialog(res, req):
     elif rq == "конец!":
         res["response"]["text"] = "игра закончилась, дальше давай команды"
 
+    elif rq == "сыграем в крестики нолики":
+        sessionStorage[user_id]["game"] = "tic"
+        sessionStorage[user_id]["field"] = [ [0, 0, 0],
+                                             [0, 0, 0],
+                                             [0, 0, 0] ]
+        res["response"]["text"] = "_123\n1___\n2___\n3___\nговорите координаты"
     elif rq == "сыграем в сапера":
 
 
         print( """УСТАНОВИТЕ РАЗМЕРЫ ПОЛЯ  ширина высота
-                 (до 30х30) """)
+                 (до 12х20) """)
         sessionStorage[user_id]["game"] = "mine"
         sessionStorage[user_id]["law"] = "wh"
-
+    elif rq == "помощь" or rq == "что ты умеешь":
+        res["response"]["text"] = """вот список моих комманд:
+        переведи {русское слово} на {язык}
+        определи язык {слова или предложения}
+        переведи {иностранное слово} на русский
+        расскажи анекдот
+        сыграем в слова рус/анг
+        сыграем в сапера
+        помощь
+        что ты умеешь"""
+        return
 
     else:
         res["response"]["text"] = "команда не распознана, попробуй снова"
